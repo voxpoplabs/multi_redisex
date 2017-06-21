@@ -12,6 +12,7 @@ end
 
 ## Configuration
 
+```
 config :multi_redisex,
   configurations: [
     %{
@@ -26,6 +27,7 @@ config :multi_redisex,
       }
     }
   ]
+```
 
 
 ## Usage
