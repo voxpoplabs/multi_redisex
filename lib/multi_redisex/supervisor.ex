@@ -12,8 +12,10 @@ defmodule MultiRedisex.Supervisor do
   end
 
   def init([]) do
+    configurations = Application.get_env(:multi_redisex, :configurations) || []
+
     children =
-      Application.get_env(:multi_redisex, :configurations)
+      configurations
       |> Enum.map(fn(configuration) ->
         pool_options = [
           name: {:local, configuration[:pool_name]},

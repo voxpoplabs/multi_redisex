@@ -47,10 +47,10 @@ defmodule MultiRedisex.Worker do
     """
     def ensure_connection(conn, connection_options) do
       if Process.alive?(conn) do
-        conn
+        {:ok, conn }
       else
         Logger.debug "[Connector] redis connection is died, it will renew connection."
-        connect(connection_options)
+        {:error, "Connection error"}
       end
     end
   end
@@ -66,12 +66,17 @@ defmodule MultiRedisex.Worker do
   end
 
   @doc false
-  def handle_call(%{command: command, params: params}, _from, %{conn: conn, connection_options: connection_options}) do
-    conn = Connector.ensure_connection(conn, connection_options)
-    case command do
-      :query -> {:reply, q(conn, params), %{conn: conn, connection_options: connection_options}}
-      :query_pipe -> {:reply, p(conn, params), %{conn: conn, connection_options: connection_options}}
-      :eval -> {:reply, ev(conn, params), %{conn: conn, connection_options: connection_options}}
+  def handle_call(%{command: command, params: params}, _from, state = %{conn: conn, connection_options: connection_options}) do
+    Connector.ensure_connection(conn, connection_options)
+    |> case do
+      {:ok, conn} ->
+        case command do
+          :query -> {:reply, q(conn, params), %{conn: conn, connection_options: connection_options}}
+          :query_pipe -> {:reply, p(conn, params), %{conn: conn, connection_options: connection_options}}
+          :eval -> {:reply, ev(conn, params), %{conn: conn, connection_options: connection_options}}
+        end
+
+      {:error, _message} -> {:stop, :normal, state}
     end
   end
 
