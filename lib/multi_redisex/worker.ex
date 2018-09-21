@@ -13,11 +13,12 @@ defmodule MultiRedisex.Worker do
   `state` - default state is `%{conn: nil}`
   """
   def start_link(connection_options) do
-    GenServer.start_link(__MODULE__, %{conn: nil, connection_options: connection_options}, [])
+    GenServer.start_link(__MODULE__, connection_options, [])
   end
 
-  def init(state) do
-    {:ok, state}
+  def init(connection_options) do
+    conn = MultiRedisex.Worker.Connector.connect(connection_options)
+    {:ok, %{ conn: conn, connection_options: connection_options }}
   end
 
   defmodule Connector do
