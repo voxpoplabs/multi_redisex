@@ -58,13 +58,17 @@ defmodule MultiRedisex do
   `query` sends commands directly to Redis
   """
   def query(pool_name,args) do
-    MultiRedisex.Supervisor.q(pool_name, args)
+    pool_name <> "_read"
+    |> String.to_atom()
+    |> MultiRedisex.Supervisor.q(args)
   end
 
   @doc ~S"""
   `query_pipe` sends multiple commands as batch directly to Redis.
   """
   def query_pipe(pool_name, args) do
-    MultiRedisex.Supervisor.p(pool_name, args)
+    pool_name <> "_write"
+    |> String.to_atom()
+    |> MultiRedisex.Supervisor.p(args)
   end
 end
