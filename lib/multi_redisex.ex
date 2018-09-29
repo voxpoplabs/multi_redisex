@@ -27,6 +27,33 @@ defmodule MultiRedisex do
     Supervisor.start_link(children, opts)
   end
 
+  def read(pool_name, args) do
+    pool_name <> "_read"
+    |> String.to_atom()
+    |> MultiRedisex.Supervisor.q(args)
+  end
+
+  def read_pipe(pool_name, args) do
+    pool_name <> "_read"
+    |> String.to_atom()
+    |> MultiRedisex.Supervisor.p(args)
+  end
+
+  def write(pool_name, args) do
+    pool_name <> "_write"
+    |> String.to_atom()
+    |> MultiRedisex.Supervisor.q(args)
+  end
+
+   @doc ~S"""
+  `eval` send eval command directly to Redis
+  """
+  def eval(pool_name, args) do
+    pool_name <> "_write"
+    |> String.to_atom()
+    |> MultiRedisex.Supervisor.ev(args)
+  end
+
   @doc ~S"""
   `query` sends commands directly to Redis
   """
@@ -39,12 +66,5 @@ defmodule MultiRedisex do
   """
   def query_pipe(pool_name, args) do
     MultiRedisex.Supervisor.p(pool_name, args)
-  end
-
-  @doc ~S"""
-  `eval` send eval command directly to Redis
-  """
-  def eval(pool_name, args) do
-    MultiRedisex.Supervisor.ev(pool_name, args)
   end
 end

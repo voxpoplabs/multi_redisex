@@ -14,15 +14,33 @@ defmodule MultiRedisex.Supervisor do
   def init([]) do
     children =
       Application.get_env(:multi_redisex, :configurations)
-      |> Enum.map(fn(configuration) ->
-        pool_options = [
-          name: {:local, configuration[:pool_name]},
+      |> Enum.flat_map(fn(configuration) ->
+        write_pool_options = [
+          name: {:local, "#{configuration[:pool_name]}_write" |> String.to_atom()},
           worker_module: MultiRedisex.Worker,
           size: configuration[:pool_size] || 10,
           max_overflow: configuration[:pool_max_overflow] || 1
         ]
 
-        :poolboy.child_spec(configuration[:pool_name], pool_options, configuration[:connection_options])
+        read_pool_options = [
+          name: {:local, "#{configuration[:pool_name]}_read" |> String.to_atom()},
+          worker_module: MultiRedisex.Worker,
+          size: configuration[:pool_size] || 10,
+          max_overflow: configuration[:pool_max_overflow] || 1
+        ]
+
+        [
+          :poolboy.child_spec(
+            "#{configuration[:pool_name]}_write" |> String.to_atom(), 
+            write_pool_options, 
+            Map.merge(configuration[:connection_options], %{ hosts: get_in(configuration, [:connection_hosts, :write])})
+          ),
+          :poolboy.child_spec(
+            "#{configuration[:pool_name]}_read" |> String.to_atom(), 
+            read_pool_options, 
+            Map.merge(configuration[:connection_options], %{ hosts: get_in(configuration, [:connection_hosts, :read])})
+          )
+        ]
       end)
 
     supervise(children, strategy: :one_for_one)

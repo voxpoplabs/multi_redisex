@@ -29,7 +29,7 @@ defmodule MultiRedisex.Worker do
     Using config `redis_poolex` to connect to redis server via `Exredis`
     """
     def connect(connection_options) do
-      host = connection_options[:host]
+      host = Enum.random(connection_options[:hosts])
       port = connection_options[:port]
       password = connection_options[:password] || ""
       database = connection_options[:db] || 0
